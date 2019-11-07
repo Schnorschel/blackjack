@@ -1,14 +1,30 @@
 <!DOCTYPE html>
 <html>
   <head lang="en">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Blackjack</title>
-    <link rel="shortcut icon" href="/favicon.ico">
-    <link rel="stylesheet" href="/screen.css">
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/screen.css" />
   </head>
   <body>
-    <h1 class='hello-world'></h1>
+    <h1 class="title">Blackjack</h1>
+    <main class="mainContainer">
+      <section class="houseContainer playerContainer">
+        <h2 class="playerName">House</h2>
+        <section class="cardsOfHouseContainer cardsContainer">
+          <p>&nbsp;</p>
+        </section>
+      </section>
+      <section class="player1Container playerContainer">
+        <h2 class="playerName player1Name">Player 1</h2>
+        <section class="cardsOfPlayer1Container cardsContainer">
+          <p>&nbsp;</p>
+        </section>
+        <button class="hitMePlayer1">Hit Me!</button>
+        <button class="standPlayer1">Stand</button>
+      </section>
+    </main>
     <script src="/main.js" charset="utf-8"></script>
   </body>
 </html>
