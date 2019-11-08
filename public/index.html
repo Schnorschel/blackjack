@@ -9,20 +9,21 @@
   </head>
   <body>
     <h1 class="title">Blackjack</h1>
+    <h2 class="message"></h2>
     <main class="mainContainer">
       <section class="houseContainer playerContainer">
         <h2 class="playerName">House</h2>
-        <section class="cardsOfHouseContainer cardsContainer">
-          <p>&nbsp;</p>
-        </section>
+        <section class="cardsOfHouseContainer cardsContainer"></section>
       </section>
+
       <section class="player1Container playerContainer">
         <h2 class="playerName player1Name">Player 1</h2>
-        <section class="cardsOfPlayer1Container cardsContainer">
-          <p>&nbsp;</p>
+        <section class="player1Subheading playerSubheading">
+          <button class="hitMePlayer1">Hit Me!</button>
+          <p class="player1Score playerScore"></p>
+          <button class="standPlayer1">Stand</button>
         </section>
-        <button class="hitMePlayer1">Hit Me!</button>
-        <button class="standPlayer1">Stand</button>
+        <section class="cardsOfPlayer1Container cardsContainer"></section>
       </section>
     </main>
     <script src="/main.js" charset="utf-8"></script>
