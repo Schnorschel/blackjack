@@ -24,7 +24,7 @@ const ranks = [
 
 let i, j
 
-// Create the data structure (array) that holds the default card deck of 52 cards
+// Create and populate the data structure (array) that holds the default card deck of 52 cards
 const makeDeck = () => {
   for (let i = 0; i < suits.length; i++) {
     for (let j = 0; j < ranks.length; j++) {
@@ -63,7 +63,9 @@ const calculateDeckValue = deck => {
 
 // Show the total score of cards given in deck in tag className
 const showScore = (deck, className) => {
-  document.querySelector(className).textContent = calculateDeckValue(deck)
+  const score = calculateDeckValue(deck)
+  document.querySelector(className).textContent = score
+  return score
 }
 
 // return the name of the card given in card
@@ -92,20 +94,30 @@ const cardImageName = card => {
 
 // Move the top-most card from fromDeck to toDeck
 const moveCardFromTo = (fromDeck, toDeck) => {
-  toDeck.push(fromDeck.splice(fromDeck.length - 1, 1)[0])
-  // or: toDeck.push(fromDeck.pop())
+  // or: toDeck.push(fromDeck.splice(fromDeck.length - 1, 1)[0])
+  toDeck.push(fromDeck.pop())
 }
 
-const checkScore = deck => {
-  if (calculateDeckValue(dealerHand) > 21) {
+const checkScore = () => {
+  const houseScore = calculateDeckValue(dealerHand)
+  const player1Score = calculateDeckValue(player1Hand)
+  if (houseScore > 21) {
     document.querySelector('.message').textContent = 'Dealer loses'
-  } else if (calculateDeckValue(player1Hand) > 21) {
-    document.querySelector('.message').textContent = 'Player 1 loses'
+  } else if (player1Score > 21) {
+    document.querySelector('.message').textContent =
+      document.querySelector('.message').textContent + ' Player 1 loses'
+  } else if (houseScore > player1Score) {
+    document.querySelector('.message').textContent = 'Dealer wins'
+  } else if (houseScore < player1Score) {
+    document.querySelector('.message').textContent = 'Player 1 wins'
+  } else {
+    document.querySelector('.message').textContent = "It's a tie"
   }
+  disableButtons()
 }
 
 // Show top of card in deck in tag className
-const showTopCard = (deck, className, showHide) => {
+const layDownTopCard = (deck, className, showHide) => {
   // Code for name of cards
   // document.querySelector(className).textContent = cardName(
   //   deck[deck.length - 1]
@@ -114,7 +126,8 @@ const showTopCard = (deck, className, showHide) => {
   const cardImg = document.createElement('img')
   if (showHide) {
     cardImg.src = '/images/' + cardImageName(deck[deck.length - 1])
-    cardImg.alt = 'Value: ' + deck[deck.length - 1].value
+    cardImg.alt = '/images/card_back.svg'
+    // cardImg.alt = 'Value: ' + deck[deck.length - 1].value
   } else {
     cardImg.alt = '/images/' + cardImageName(deck[deck.length - 1])
     cardImg.src = '/images/card_back.svg'
@@ -123,21 +136,32 @@ const showTopCard = (deck, className, showHide) => {
   document.querySelector(className).appendChild(cardImg)
 }
 
+const disableButtons = className => {
+  for (
+    let i = 0;
+    i < document.querySelectorAll('.buttonDisablable').length;
+    i++
+  ) {
+    document.querySelectorAll('.buttonDisablable')[i].disabled = true
+  }
+}
+
 // Deal a card to Player 1
 const dealCardToPlayer1 = () => {
   // console.log('Event: dealCard.click')
-  moveCardFromTo(deck, player1Hand)
-  showTopCard(player1Hand, '.cardsOfPlayer1Container', show)
-  showScore(player1Hand, '.player1Score')
-  if (calculateDeckValue(player1Hand) > 21) {
+  // moveCardFromTo(deck, player1Hand)
+  // layDownTopCard(player1Hand, '.cardsOfPlayer1Container', show)
+  dealCardToPlayer(deck, player1Hand, '.cardsOfPlayer1Container', show)
+  if (showScore(player1Hand, '.player1Score') > 21) {
     document.querySelector('.message').textContent = 'Player 1 loses'
+    disableButtons()
   }
   // showNoOfCards(deck, '.noOfCards')
 }
 
 const dealCardToPlayer = (fromDeck, toHand, className, showHide) => {
   moveCardFromTo(fromDeck, toHand)
-  showTopCard(dealerHand, '.cardsOfHouseContainer', showHide)
+  layDownTopCard(toHand, className, showHide)
 }
 
 // Show the number of cards in deck in tag className
@@ -149,6 +173,31 @@ const beginGame = () => {
   // First two cards go to dealer
   dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', hide)
   dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', hide)
+  // Next two cards go to player
+  dealCardToPlayer(deck, player1Hand, '.cardsOfPlayer1Container', show)
+  dealCardToPlayer(deck, player1Hand, '.cardsOfPlayer1Container', show)
+  showScore(player1Hand, '.player1Score')
+}
+
+const flipCards = className => {
+  for (let i = 0; i < document.querySelector(className).children.length; i++) {
+    const temp = document.querySelector(className).children[i].alt
+    console.log(
+      temp + ' -> ' + document.querySelector(className).children[i].src
+    )
+    document.querySelector(className).children[i].alt = document.querySelector(
+      className
+    ).children[i].src
+    document.querySelector(className).children[i].src = temp
+  }
+}
+
+const housePlays = () => {
+  flipCards('.cardsOfHouseContainer')
+  while (showScore(dealerHand, '.houseScore') < 17) {
+    dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', show)
+  }
+  checkScore()
 }
 
 const main = () => {
@@ -167,9 +216,11 @@ const main = () => {
   console.log('Showing cards:')
   showCards(deck)
   beginGame()
+  //
 }
 
 document.addEventListener('DOMContentLoaded', main)
 document
   .querySelector('.hitMePlayer1')
   .addEventListener('click', dealCardToPlayer1)
+document.querySelector('.standPlayer1').addEventListener('click', housePlays)

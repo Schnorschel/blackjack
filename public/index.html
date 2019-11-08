@@ -9,19 +9,22 @@
   </head>
   <body>
     <h1 class="title">Blackjack</h1>
-    <h2 class="message"></h2>
+    <h2 class="message">&nbsp;</h2>
     <main class="mainContainer">
       <section class="houseContainer playerContainer">
-        <h2 class="playerName">House</h2>
+        <h2 class="playerName">Dealer</h2>
+        <section class="houseSubheading playerSubheading">
+          <p class="houseScore playerScore">&nbsp;</p>
+        </section>
         <section class="cardsOfHouseContainer cardsContainer"></section>
       </section>
 
       <section class="player1Container playerContainer">
         <h2 class="playerName player1Name">Player 1</h2>
         <section class="player1Subheading playerSubheading">
-          <button class="hitMePlayer1">Hit Me!</button>
-          <p class="player1Score playerScore"></p>
-          <button class="standPlayer1">Stand</button>
+          <button class="hitMePlayer1 buttonDisablable">Hit Me!</button>
+          <p class="player1Score playerScore">&nbsp;</p>
+          <button class="standPlayer1 buttonDisablable">Hold</button>
         </section>
         <section class="cardsOfPlayer1Container cardsContainer"></section>
       </section>
