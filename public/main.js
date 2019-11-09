@@ -1,10 +1,10 @@
-const deck = []
-const spentDeck = []
-const player1Hand = []
-const dealerHand = []
-const show = true
+let deck = [] // The main card deck
+let spentDeck = [] // Cards taken off the main deck are stored here (not used)
+let player1Hand = [] // Player 1 hand
+let dealerHand = [] // Dealer hand
+const show = true // A verbose constant for indicating whether to show or hide a card when being dealt
 const hide = false
-const values = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
+const values = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10] // Array for assigning values to each card
 const suits = ['Clubs', 'Diamonds', 'Hearts', 'Spades']
 const ranks = [
   'Ace',
@@ -24,6 +24,9 @@ const ranks = [
 
 let i, j
 
+const qS = e => document.querySelector(e)
+const qSA = e => document.querySelectorAll(e)
+
 // Create and populate the data structure (array) that holds the default card deck of 52 cards
 const makeDeck = () => {
   for (let i = 0; i < suits.length; i++) {
@@ -34,14 +37,40 @@ const makeDeck = () => {
   }
 }
 
-// Display the card deck given in hand in the console
+const removeAllChildren = className => {
+  // const container = document.getElementById(className)
+  // const elements = document.getElementsByClassName(className)
+
+  // while (elements[0]) {
+  //   elements[0].parent.removeChild(elements[0])
+  // }
+  const e = document.querySelector(className)
+  let first = e.firstElementChild
+  while (first) {
+    first.remove()
+    first = e.firstElementChild
+  }
+}
+// const myNode = qS(className)
+// let child = myNode.lastElementChild
+// while (child) {
+//   myNode.removeChild(child)
+//   child = myNode.lastElementChild
+// }
+// while (myNode.firstChild) {
+//   myNode.removeChild(myNode.firstChild)
+// }
+// myNode.querySelectorAll('*').forEach(n => n.remove())
+// }
+
+// Display the card deck given in array 'hand' in the console
 const showCards = hand => {
   for (let i = 0; i < hand.length; i++) {
     console.log(hand[i].rank + ' of ' + hand[i].suit)
   }
 }
 
-// Shuffle the deck given in hand
+// Shuffle the deck given in array 'hand'
 const shuffleDeck = hand => {
   let temp
   for (i = hand.length - 1; i > 0; i--) {
@@ -53,7 +82,7 @@ const shuffleDeck = hand => {
 }
 
 // Calculate and return the total value of cards in deck
-const calculateDeckValue = deck => {
+const getDeckValue = deck => {
   let sum = 0
   for (let i = 0; i < deck.length; i++) {
     sum += deck[i].value
@@ -63,8 +92,8 @@ const calculateDeckValue = deck => {
 
 // Show the total score of cards given in deck in tag className
 const showScore = (deck, className) => {
-  const score = calculateDeckValue(deck)
-  document.querySelector(className).textContent = score
+  const score = getDeckValue(deck)
+  qS(className).textContent = score
   return score
 }
 
@@ -73,13 +102,14 @@ const cardName = card => {
   return card.rank + ' of ' + card.suit
 }
 
-// return the path of the corresponding image given the card object in card
+// Return the path of the corresponding image given the card object in card
 const cardImageName = card => {
-  // Find the image file name of a card given its array reference
-  // - Take the name
+  // Returns the image file name of a card given its object reference
+  // - Deduct the card name given the object 'card'
   // - Convert it to lowercase
   // - Replace all spaces with underscores
-  // - Add a '2' at the end, if the rank is a name, because those show pictures
+  // - Add a '2' at the end, if the rank is a name, because only the
+  //   face cards ending in '2' show pictures
   return (
     cardName(card)
       .toLowerCase()
@@ -94,32 +124,39 @@ const cardImageName = card => {
 
 // Move the top-most card from fromDeck to toDeck
 const moveCardFromTo = (fromDeck, toDeck) => {
-  // or: toDeck.push(fromDeck.splice(fromDeck.length - 1, 1)[0])
+  // previously: toDeck.push(fromDeck.splice(fromDeck.length - 1, 1)[0])
   toDeck.push(fromDeck.pop())
 }
 
+// The final check after dealer plays and display winner/loser message
 const checkScore = () => {
-  const houseScore = calculateDeckValue(dealerHand)
-  const player1Score = calculateDeckValue(player1Hand)
+  const houseScore = getDeckValue(dealerHand)
+  const player1Score = getDeckValue(player1Hand)
   if (houseScore > 21) {
-    document.querySelector('.message').textContent = 'Dealer loses'
+    qS('.message').textContent = 'Dealer loses'
   } else if (player1Score > 21) {
-    document.querySelector('.message').textContent =
-      document.querySelector('.message').textContent + ' Player 1 loses'
+    qS('.message').textContent =
+      qS('.message').textContent +
+      ' ' +
+      qS('.player1Name').textContent +
+      ' loses'
   } else if (houseScore > player1Score) {
-    document.querySelector('.message').textContent = 'Dealer wins'
+    qS('.message').textContent = 'Dealer wins'
   } else if (houseScore < player1Score) {
-    document.querySelector('.message').textContent = 'Player 1 wins'
+    qS('.message').textContent = qS('.player1Name').textContent + ' wins'
   } else {
-    document.querySelector('.message').textContent = "It's a tie"
+    qS('.message').textContent = "It's a tie"
   }
-  disableButtons()
 }
 
 // Show top of card in deck in tag className
 const layDownTopCard = (deck, className, showHide) => {
+  // Depending on boolean argument showHide, show the card back image or not
+  // or the actual card image.
+  // showHide == true: show image, i.e. image file name is assigned to src attribute
+  // showHide == false: show back card image, i.e. image file name is assigned to alt attribute
   // Code for name of cards
-  // document.querySelector(className).textContent = cardName(
+  // qS(className).textContent = cardName(
   //   deck[deck.length - 1]
   // )
   // console.log(cardName(deck[deck.length - 1]))
@@ -132,17 +169,14 @@ const layDownTopCard = (deck, className, showHide) => {
     cardImg.alt = '/images/' + cardImageName(deck[deck.length - 1])
     cardImg.src = '/images/card_back.svg'
   }
-  console.log(className, cardImg.img, cardImg.alt)
-  document.querySelector(className).appendChild(cardImg)
+  // console.log(className, cardImg.img, cardImg.alt)
+  qS(className).appendChild(cardImg)
 }
 
+// Disable all buttons with class '.buttonDisablable'
 const disableButtons = className => {
-  for (
-    let i = 0;
-    i < document.querySelectorAll('.buttonDisablable').length;
-    i++
-  ) {
-    document.querySelectorAll('.buttonDisablable')[i].disabled = true
+  for (let i = 0; i < qSA('.buttonDisablable').length; i++) {
+    qSA('.buttonDisablable')[i].disabled = true
   }
 }
 
@@ -153,8 +187,11 @@ const dealCardToPlayer1 = () => {
   // layDownTopCard(player1Hand, '.cardsOfPlayer1Container', show)
   dealCardToPlayer(deck, player1Hand, '.cardsOfPlayer1Container', show)
   if (showScore(player1Hand, '.player1Score') > 21) {
-    document.querySelector('.message').textContent = 'Player 1 loses'
+    flipCards('.cardsOfHouseContainer')
+    showScore(dealerHand, '.houseScore')
+    qS('.message').textContent = qS('.player1Name').textContent + ' loses'
     disableButtons()
+    qS('.footer').style.display = 'flex'
   }
   // showNoOfCards(deck, '.noOfCards')
 }
@@ -164,40 +201,87 @@ const dealCardToPlayer = (fromDeck, toHand, className, showHide) => {
   layDownTopCard(toHand, className, showHide)
 }
 
-// Show the number of cards in deck in tag className
+// Show the number of cards in deck given HTML tag's className
 const showNoOfCards = (deck, className) => {
-  document.querySelector(className).textContent = deck.length
+  qS(className).textContent = deck.length
 }
 
+// Run the initial steps, like giving two cards to dealer and (each) player,
+// show total card value for player(s) only
 const beginGame = () => {
-  // First two cards go to dealer
-  dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', hide)
-  dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', hide)
-  // Next two cards go to player
+  // Deal to player, dealer, player, dealer
   dealCardToPlayer(deck, player1Hand, '.cardsOfPlayer1Container', show)
+  dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', hide)
   dealCardToPlayer(deck, player1Hand, '.cardsOfPlayer1Container', show)
+  dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', hide)
   showScore(player1Hand, '.player1Score')
 }
 
+// Flip all cards over given the container class in className.
+// This is done by swapping the contents of the src and alt attributes.
+// The swappable content is the file name of the back card image and the
+// file name of the card image.
 const flipCards = className => {
-  for (let i = 0; i < document.querySelector(className).children.length; i++) {
-    const temp = document.querySelector(className).children[i].alt
-    console.log(
-      temp + ' -> ' + document.querySelector(className).children[i].src
-    )
-    document.querySelector(className).children[i].alt = document.querySelector(
-      className
-    ).children[i].src
-    document.querySelector(className).children[i].src = temp
+  for (let i = 0; i < qS(className).children.length; i++) {
+    const temp = qS(className).children[i].alt
+    // console.log(temp + ' -> ' + qS(className).children[i].src)
+    qS(className).children[i].alt = qS(className).children[i].src
+    qS(className).children[i].src = temp
   }
 }
 
+// The steps to run after the player holds/stands and the dealer/house
+// finishes the game
 const housePlays = () => {
+  // Show the dealer's cards' faces
   flipCards('.cardsOfHouseContainer')
+  // The dealer draws a new card as long as the total value is below 17
   while (showScore(dealerHand, '.houseScore') < 17) {
     dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', show)
   }
+  // Check all player's card value totals and display who is winner/loser
   checkScore()
+  // Disable the Player's buttons
+  disableButtons()
+  // show reset button
+  qS('.footer').style.display = 'flex'
+}
+
+const resetGame = () => {
+  // - Refresh deck array and shuffle again
+  deck = []
+  makeDeck()
+  shuffleDeck(deck)
+  // - Clean out dealer and player hands
+  dealerHand = []
+  player1Hand = []
+  // - Clean out winner/lose message
+  qS('.message').innerHTML = '&nbsp;'
+  // - Clean the card scores
+  for (i = 0; i < qSA('.playerScore').length; i++) {
+    qSA('.playerScore')[i].textContent = ''
+  }
+  // - Hide reset button
+  qS('.footer').style.display = 'none'
+  // Re-enable buttons
+  for (let i = 0; i < qSA('.buttonDisablable').length; i++) {
+    qSA('.buttonDisablable')[i].disabled = false
+  }
+  // Remove cards from card containers
+  removeAllChildren('.cardsOfPlayer1Container')
+  removeAllChildren('.cardsOfHouseContainer')
+
+  // Start the game again
+  beginGame()
+}
+
+const enterPlayer1Name = () => {
+  let newName = ''
+
+  while (newName === '') {
+    newName = window.prompt('Please enter your name:')
+  }
+  qS('.player1Name').textContent = newName
 }
 
 const main = () => {
@@ -220,7 +304,7 @@ const main = () => {
 }
 
 document.addEventListener('DOMContentLoaded', main)
-document
-  .querySelector('.hitMePlayer1')
-  .addEventListener('click', dealCardToPlayer1)
-document.querySelector('.standPlayer1').addEventListener('click', housePlays)
+qS('.hitMePlayer1').addEventListener('click', dealCardToPlayer1)
+qS('.standPlayer1').addEventListener('click', housePlays)
+qS('.reset').addEventListener('click', resetGame)
+qS('.player1Name').addEventListener('dblclick', enterPlayer1Name)
