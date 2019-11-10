@@ -25,6 +25,7 @@ const ranks = [
 
 let i, j
 
+// Some functions to allow short-hand of often-used querySelector method calls
 const qS = e => document.querySelector(e)
 const qSA = e => document.querySelectorAll(e)
 
@@ -39,6 +40,9 @@ const makeDeck = () => {
   }
 }
 
+// Remove all child tags of a tag given in className.
+// This is used in the reset-game routine to remove
+// all images.
 const removeAllChildren = className => {
   // const container = document.getElementById(className)
   // const elements = document.getElementsByClassName(className)
@@ -83,7 +87,7 @@ const shuffleDeck = hand => {
   }
 }
 
-// Calculate and return the total value of cards in deck/hand
+// Calculate and return the total value of cards in given deck/hand
 const getDeckValue = deck => {
   let sum = 0
   for (let i = 0; i < deck.length; i++) {
@@ -93,6 +97,7 @@ const getDeckValue = deck => {
 }
 
 // Show the total score of cards given in deck in tag className
+// and return the score to the caller
 const showScore = (deck, className) => {
   const score = getDeckValue(deck)
   qS(className).textContent = score
@@ -104,18 +109,26 @@ const cardName = card => {
   return card.rank + ' of ' + card.suit
 }
 
+// Update the wins stats indicator by calculating the percentage
+// the progress bar has to be at. E.g. a score of parity (1:1)
+// needs to have the progress bar at exactly 50%.
+// A score of 1:2 has it at 33% = 1/(1+2) = 1/3
 const displayNoOfWins = (countHouse, countPlayer) => {
   // qStC(className, ' (' + count + ' wins)')
+  // Update the text score
   qStC('.score', countHouse + ':' + countPlayer)
-  console.log('wins[0]: ' + wins[0] + ', wins[1]: ' + wins[1])
-  console.log('In: ' + Math.floor(100 * (wins[0] / (wins[0] + wins[1]))) + '%')
+  // console.log('wins[0]: ' + wins[0] + ', wins[1]: ' + wins[1])
+  // console.log('In: ' + Math.floor(100 * (wins[0] / (wins[0] + wins[1]))) + '%')
+  // If dealer score (wins[0]) and player 1 score (wins[1]) are both zero, the formula to
+  // calculate the percentage of the progress bar will fail, so that case has to be caught
+  // and dealt with specially
   if (wins[0] + wins[1] === 0) {
     qS('#progress-bar-percentage').style.width = '50%'
   } else {
     qS('#progress-bar-percentage').style.width =
       Math.floor(100 * (wins[0] / (wins[0] + wins[1]))) + '%'
   }
-  console.log('Width: ' + qS('#progress-bar-percentage').style.width)
+  // console.log('Width: ' + qS('#progress-bar-percentage').style.width)
 }
 
 // Return the path of the corresponding image given the card object in card
@@ -212,7 +225,7 @@ const dealCardToPlayer1 = () => {
   // layDownTopCard(player1Hand, '.cardsOfPlayer1Container', show)
   dealCardToPlayer(deck, player1Hand, '.cardsOfPlayer1Container', show)
   if (showScore(player1Hand, '.player1Score') > 21) {
-    flipCards('.cardsOfHouseContainer')
+    flipCards('.cardsOfHouseContainer', 'show')
     showScore(dealerHand, '.houseScore')
     wins[0]++
     displayNoOfWins(wins[0], wins[1])
@@ -240,22 +253,54 @@ const beginGame = () => {
   dealCardToPlayer(deck, player1Hand, '.cardsOfPlayer1Container', show)
   dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', hide)
   dealCardToPlayer(deck, player1Hand, '.cardsOfPlayer1Container', show)
-  dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', hide)
+  dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', show)
   showScore(player1Hand, '.player1Score')
+  if (getDeckValue(player1Hand) === 21) {
+    housePlays()
+  }
 }
 
-// Flip all cards over given the container class in className.
+// Show, hide or flip all cards over given the container class in className.
 // This is done by swapping the contents of the src and alt attributes.
-// The swappable content is the file name of the back card image and the
-// file name of the card image.
+// The swappable content is the file name of the back card image
+// (card_back.svg) and the file name of the card image.
 const flipCards = (className, type, count) => {
-  // type: [show, hide, 'toggle']
-  // count: how many cards from back end to apply type to
-  for (let i = 0; i < qS(className).children.length; i++) {
-    const temp = qS(className).children[i].alt
-    // console.log(temp + ' -> ' + qS(className).children[i].src)
-    qS(className).children[i].alt = qS(className).children[i].src
-    qS(className).children[i].src = temp
+  // className: class name of the container tag inside of which are the img tags
+  // type: ('show' | 'hide' | 'toggle')
+  // count: how many cards from back end to apply type to (not yet implemented)
+  if (typeof count === 'undefined') {
+    count = 9999
+  }
+  if (typeof type === 'undefined') {
+    type = 'show'
+  }
+  for (let i = 0; i < Math.min(qS(className).children.length, count); i++) {
+    let flip = false
+    const alt = qS(className).children[i].alt
+    switch (type) {
+      case 'show':
+        // Show card unconditionally, so ensure 'back' appears in img alt-attribute
+        // If it doesn't, set flip to true
+        if (alt.indexOf('back') === -1) {
+          flip = true
+        }
+        break
+      case 'hide':
+        // Hide card unconditionally, so ensure 'back' does not appear in img alt-attribute
+        if (alt.indexOf('back') > -1) {
+          flip = true
+        }
+        break
+      case 'toggle':
+        // Toggle card unconditionally, so no pre-check necessary
+        flip = true
+        break
+    }
+    if (flip) {
+      // console.log(temp + ' -> ' + qS(className).children[i].src)
+      qS(className).children[i].alt = qS(className).children[i].src
+      qS(className).children[i].src = alt
+    }
   }
 }
 
@@ -263,7 +308,7 @@ const flipCards = (className, type, count) => {
 // finishes the game
 const housePlays = () => {
   // Show the dealer's cards' faces
-  flipCards('.cardsOfHouseContainer')
+  flipCards('.cardsOfHouseContainer', 'show')
   // The dealer draws a new card as long as the total value is below 17
   while (showScore(dealerHand, '.houseScore') < 17) {
     dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', show)
@@ -307,7 +352,7 @@ const resetGame = () => {
 const enterPlayer1Name = () => {
   let newName = ''
 
-  while (newName === '') {
+  while (newName === '' || newName == null) {
     newName = window.prompt('Please enter your name:')
   }
   qS('.player1Name').textContent = newName
@@ -323,7 +368,7 @@ const main = () => {
   console.log('Made deck')
   // console.log('Showing cards:')
   // showCards(deck)
-  console.log()
+  // console.log()
   console.log('Shuffling cards.')
   shuffleDeck(deck)
   // console.log('Showing cards:')
