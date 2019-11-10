@@ -5,6 +5,7 @@ let dealerHand = [] // Dealer hand
 const wins = [0, 0]
 const show = true // A verbose constant for indicating whether to show or hide a card when being dealt
 const hide = false
+const showHighestOnly = true
 const values = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10] // Array for assigning values to each card
 const suits = ['Clubs', 'Diamonds', 'Hearts', 'Spades']
 const ranks = [
@@ -57,17 +58,6 @@ const removeAllChildren = className => {
     first = e.firstElementChild
   }
 }
-// const myNode = qS(className)
-// let child = myNode.lastElementChild
-// while (child) {
-//   myNode.removeChild(child)
-//   child = myNode.lastElementChild
-// }
-// while (myNode.firstChild) {
-//   myNode.removeChild(myNode.firstChild)
-// }
-// myNode.querySelectorAll('*').forEach(n => n.remove())
-// }
 
 // Display the card deck given in array 'hand' in the console
 const showCards = hand => {
@@ -87,7 +77,7 @@ const shuffleDeck = hand => {
   }
 }
 
-// Calculate and return the total value of cards in given deck/hand
+// Calculate and return the total value of cards in given deck/hand (deprecated)
 const getDeckValue = deck => {
   let sum = 0
   for (let i = 0; i < deck.length; i++) {
@@ -96,12 +86,94 @@ const getDeckValue = deck => {
   return sum
 }
 
-// Show the total score of cards given in deck in tag className
-// and return the score to the caller
-const showScore = (deck, className) => {
-  const score = getDeckValue(deck)
-  qS(className).textContent = score
-  return score
+// Calculate the total value of cards given in 'deck' with aces
+// counting as 1 or 11
+// Returns an array of all possible scores 21 or lower,
+// except if the only score is greater than 21
+const getDeckValueArray = (deck, showHighestOnly) => {
+  const valueArray = []
+  let noOfAces = 0
+  let sum = 0
+  if (typeof showHighestOnly === 'undefined') {
+    showHighestOnly = false
+  }
+
+  // Calculate the total value of the hand with all aces counting as 1 only.
+  // This will be the lowest possible total (if aces are present).
+  for (let i = 0; i < deck.length; i++) {
+    if (deck[i].value === 11) {
+      noOfAces++
+      sum += 1
+    } else {
+      sum += deck[i].value
+    }
+  }
+  // Add the first (=lowest) hand total value to the array
+  valueArray.push(sum)
+  // If that total is greater than 21 it's a bust and additional totals
+  // are not needed, so return with the value array to the caller
+  if (sum > 21) {
+    if (showHighestOnly) {
+      return valueArray[valueArray.length - 1]
+    } else {
+      return valueArray
+    }
+  }
+
+  // For each ace in the hand add 10 to the total and push the
+  // new total value to the valueArray, but not if the total is
+  // above 21
+  for (let i = 1; i <= noOfAces; i++) {
+    sum += 10
+    if (sum > 21) {
+      if (showHighestOnly) {
+        return valueArray[valueArray.length - 1]
+      } else {
+        return valueArray
+      }
+    }
+    valueArray.push(sum)
+  }
+  if (showHighestOnly) {
+    return valueArray[valueArray.length - 1]
+  } else {
+    return valueArray
+  }
+}
+
+// Show the total score of cards given in hand in
+// HTML tag className and return the score to the caller
+const showScore = (hand, className, showHighestOnly) => {
+  // const score = getDeckValue(hand)
+  // qS(className).textContent = score
+  // return score
+
+  // Compose the comma-delimited list of possible total hand values, but
+  // replace the last comma with an 'or'
+  const valueArray = getDeckValueArray(hand)
+  let valuesCommaList = ''
+  for (let i = 0; i < valueArray.length; i++) {
+    valuesCommaList +=
+      (valuesCommaList.length > 0
+        ? i === valueArray.length - 1
+          ? ' or '
+          : ', '
+        : '') + valueArray[i]
+  }
+
+  // Display the hand total with the tag for which the class name has been provided.
+  // If class name is missing, skip
+  if (typeof className !== 'undefined') {
+    if (typeof showHighestOnly !== 'undefined') {
+      qS(className).textContent = showHighestOnly
+        ? valueArray[valueArray.length - 1]
+        : valuesCommaList
+    } else {
+      qStC(className, valuesCommaList)
+    }
+  }
+  // Return the highest score as the score
+  return valueArray[valueArray.length - 1]
 }
 
 // return the name of the card given in card
@@ -110,7 +182,7 @@ const cardName = card => {
 }
 
 // Update the wins stats indicator by calculating the percentage
-// the progress bar has to be at. E.g. a score of parity (1:1)
+// the progress bar has to be at. E.g. a parity score (e.g. 1:1)
 // needs to have the progress bar at exactly 50%.
 // A score of 1:2 has it at 33% = 1/(1+2) = 1/3
 const displayNoOfWins = (countHouse, countPlayer) => {
@@ -160,31 +232,47 @@ const moveCardFromTo = (fromDeck, toDeck) => {
 // The final check after dealer has played (by not going over 17).
 // Display winner/loser message.
 const checkScore = () => {
-  const houseScore = getDeckValue(dealerHand)
-  const player1Score = getDeckValue(player1Hand)
+  const houseScore = getDeckValueArray(dealerHand, showHighestOnly)
+  const player1Score = getDeckValueArray(player1Hand, showHighestOnly)
   if (houseScore > 21) {
     qS('.message').textContent = 'Dealer loses'
     if (player1Score <= 21) {
-      // this check might be redundant because if player's cards weren't 21 or under execution would never reach here
+      // this check might be redundant because if player's cards weren't 21 or under
+      // execution would never have reached here
       wins[1]++
     }
   } else if (player1Score > 21) {
-    qS('.message').textContent =
-      qS('.message').textContent +
-      ' ' +
-      qS('.player1Name').textContent +
-      ' loses'
+    qS('.message').textContent = qS('.player1Name').textContent + ' loses'
     wins[0]++
   } else if (houseScore > player1Score) {
-    qS('.message').textContent = 'Dealer wins'
+    qS('.message').textContent =
+      (isBlackjack(dealerHand) ? 'Blackjack! ' : '') + 'Dealer wins'
     wins[0]++
   } else if (houseScore < player1Score) {
-    qS('.message').textContent = qS('.player1Name').textContent + ' wins'
+    qS('.message').textContent =
+      (isBlackjack(player1Hand) ? 'Blackjack! ' : '') +
+      qS('.player1Name').textContent +
+      ' wins'
     wins[1]++
+  } else if (dealerHand.length !== player1Hand.length && houseScore === 21) {
+    if (dealerHand.length === 2) {
+      qS('.message').textContent = 'Blackjack! Dealer wins'
+      wins[0]++
+    } else if (player1Hand.length === 2) {
+      qS('.message').textContent =
+        'Blackjack! ' + qS('.player1Name').textContent + ' wins'
+      wins[1]++
+    } else {
+      qS('.message').textContent = 'Push'
+    }
   } else {
     qS('.message').textContent = 'Push'
   }
   displayNoOfWins(wins[0], wins[1])
+}
+
+const isBlackjack = hand => {
+  return getDeckValueArray(hand, showHighestOnly) === 21 && hand.length === 2
 }
 
 // Show top of card in deck in tag className
@@ -224,9 +312,13 @@ const dealCardToPlayer1 = () => {
   // moveCardFromTo(deck, player1Hand)
   // layDownTopCard(player1Hand, '.cardsOfPlayer1Container', show)
   dealCardToPlayer(deck, player1Hand, '.cardsOfPlayer1Container', show)
-  if (showScore(player1Hand, '.player1Score') > 21) {
+  // Player 1 busts
+  if (showScore(player1Hand, '.player1Score') === 21) {
+    housePlays()
+  } else if (showScore(player1Hand, '.player1Score') > 21) {
     flipCards('.cardsOfHouseContainer', 'show')
-    showScore(dealerHand, '.houseScore')
+    showScore(dealerHand, '.houseScore', showHighestOnly)
+    showScore(player1Hand, '.player1Score', showHighestOnly)
     wins[0]++
     displayNoOfWins(wins[0], wins[1])
     qS('.message').textContent = qS('.player1Name').textContent + ' loses'
@@ -255,7 +347,7 @@ const beginGame = () => {
   dealCardToPlayer(deck, player1Hand, '.cardsOfPlayer1Container', show)
   dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', show)
   showScore(player1Hand, '.player1Score')
-  if (getDeckValue(player1Hand) === 21) {
+  if (getDeckValueArray(player1Hand, showHighestOnly) === 21) {
     housePlays()
   }
 }
@@ -313,6 +405,8 @@ const housePlays = () => {
   while (showScore(dealerHand, '.houseScore') < 17) {
     dealCardToPlayer(deck, dealerHand, '.cardsOfHouseContainer', show)
   }
+  showScore(dealerHand, '.houseScore', showHighestOnly)
+  showScore(player1Hand, '.player1Score', showHighestOnly)
   // Check all player's card value totals and display who is winner/loser
   checkScore()
   // Disable the Player's buttons
