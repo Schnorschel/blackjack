@@ -39,11 +39,6 @@ h2 {
   align-items: flex-start;
 }
 
-.playerContainer {
-  display: flex;
-  /* border: 1px solid black; */
-}
-
 .playerHeading {
   width: 100%;
 }
@@ -63,7 +58,7 @@ h2 {
 }
 
 .playerContainer {
-  width: 45%;
+  width: 40%;
   display: flex;
   flex-flow: row wrap;
   /* background-color: purple; */
@@ -71,6 +66,12 @@ h2 {
   /* border: 5px solid yellowgreen; */
   margin: 0;
   padding: 0;
+}
+
+.flexContainer {
+  display: flex;
+  width: 10%;
+  background-color: black;
 }
 
 .cardsContainer {
@@ -93,4 +94,49 @@ img {
   width: 100%;
   display: none;
   justify-content: center;
+}
+
+.statsContainer {
+  width: 150px;
+  /* background-color: teal; */
+  display: flex;
+  justify-content: center;
+}
+
+.one-hundred-percent-wide {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.all-rounded {
+  /* -webkit-border-radius: 5px;
+  -moz-border-radius: 5px; */
+  border-radius: 5px 0 0 5px;
+}
+
+/* .spacer {
+  display: block;
+} */
+
+#progress-bar {
+  width: 100px;
+  background: green;
+  position: relative;
+  border-radius: 5px;
+}
+
+#progress-bar-percentage {
+  background: rgb(255, 0, 0);
+  padding: 5px 0px;
+  color: white;
+  text-align: center;
+  height: 20px;
+  width: 50%;
+}
+
+#progress-bar-percentage span {
+  display: inline-block;
+  position: absolute;
+  width: 100%;
+  left: 0;
 }

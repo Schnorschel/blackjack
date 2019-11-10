@@ -2,6 +2,7 @@ let deck = [] // The main card deck
 let spentDeck = [] // Cards taken off the main deck are stored here (not used)
 let player1Hand = [] // Player 1 hand
 let dealerHand = [] // Dealer hand
+const wins = [0, 0]
 const show = true // A verbose constant for indicating whether to show or hide a card when being dealt
 const hide = false
 const values = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10] // Array for assigning values to each card
@@ -27,11 +28,12 @@ let i, j
 const qS = e => document.querySelector(e)
 const qSA = e => document.querySelectorAll(e)
 
+const qStC = (cl, cont) => (document.querySelector(cl).textContent = cont)
+
 // Create and populate the data structure (array) that holds the default card deck of 52 cards
 const makeDeck = () => {
   for (let i = 0; i < suits.length; i++) {
     for (let j = 0; j < ranks.length; j++) {
-      // deck.push(ranks[j] + ' of ' + suits[i])
       deck.push({ rank: ranks[j], suit: suits[i], value: values[j] })
     }
   }
@@ -81,7 +83,7 @@ const shuffleDeck = hand => {
   }
 }
 
-// Calculate and return the total value of cards in deck
+// Calculate and return the total value of cards in deck/hand
 const getDeckValue = deck => {
   let sum = 0
   for (let i = 0; i < deck.length; i++) {
@@ -102,10 +104,24 @@ const cardName = card => {
   return card.rank + ' of ' + card.suit
 }
 
+const displayNoOfWins = (countHouse, countPlayer) => {
+  // qStC(className, ' (' + count + ' wins)')
+  qStC('.score', countHouse + ':' + countPlayer)
+  console.log('wins[0]: ' + wins[0] + ', wins[1]: ' + wins[1])
+  console.log('In: ' + Math.floor(100 * (wins[0] / (wins[0] + wins[1]))) + '%')
+  if (wins[0] + wins[1] === 0) {
+    qS('#progress-bar-percentage').style.width = '50%'
+  } else {
+    qS('#progress-bar-percentage').style.width =
+      Math.floor(100 * (wins[0] / (wins[0] + wins[1]))) + '%'
+  }
+  console.log('Width: ' + qS('#progress-bar-percentage').style.width)
+}
+
 // Return the path of the corresponding image given the card object in card
 const cardImageName = card => {
   // Returns the image file name of a card given its object reference
-  // - Deduct the card name given the object 'card'
+  // - Assemble the card's name from its properties rank and suit
   // - Convert it to lowercase
   // - Replace all spaces with underscores
   // - Add a '2' at the end, if the rank is a name, because only the
@@ -128,25 +144,34 @@ const moveCardFromTo = (fromDeck, toDeck) => {
   toDeck.push(fromDeck.pop())
 }
 
-// The final check after dealer plays and display winner/loser message
+// The final check after dealer has played (by not going over 17).
+// Display winner/loser message.
 const checkScore = () => {
   const houseScore = getDeckValue(dealerHand)
   const player1Score = getDeckValue(player1Hand)
   if (houseScore > 21) {
     qS('.message').textContent = 'Dealer loses'
+    if (player1Score <= 21) {
+      // this check might be redundant because if player's cards weren't 21 or under execution would never reach here
+      wins[1]++
+    }
   } else if (player1Score > 21) {
     qS('.message').textContent =
       qS('.message').textContent +
       ' ' +
       qS('.player1Name').textContent +
       ' loses'
+    wins[0]++
   } else if (houseScore > player1Score) {
     qS('.message').textContent = 'Dealer wins'
+    wins[0]++
   } else if (houseScore < player1Score) {
     qS('.message').textContent = qS('.player1Name').textContent + ' wins'
+    wins[1]++
   } else {
-    qS('.message').textContent = "It's a tie"
+    qS('.message').textContent = 'Push'
   }
+  displayNoOfWins(wins[0], wins[1])
 }
 
 // Show top of card in deck in tag className
@@ -189,6 +214,8 @@ const dealCardToPlayer1 = () => {
   if (showScore(player1Hand, '.player1Score') > 21) {
     flipCards('.cardsOfHouseContainer')
     showScore(dealerHand, '.houseScore')
+    wins[0]++
+    displayNoOfWins(wins[0], wins[1])
     qS('.message').textContent = qS('.player1Name').textContent + ' loses'
     disableButtons()
     qS('.footer').style.display = 'flex'
@@ -221,7 +248,9 @@ const beginGame = () => {
 // This is done by swapping the contents of the src and alt attributes.
 // The swappable content is the file name of the back card image and the
 // file name of the card image.
-const flipCards = className => {
+const flipCards = (className, type, count) => {
+  // type: [show, hide, 'toggle']
+  // count: how many cards from back end to apply type to
   for (let i = 0; i < qS(className).children.length; i++) {
     const temp = qS(className).children[i].alt
     // console.log(temp + ' -> ' + qS(className).children[i].src)
@@ -259,7 +288,7 @@ const resetGame = () => {
   qS('.message').innerHTML = '&nbsp;'
   // - Clean the card scores
   for (i = 0; i < qSA('.playerScore').length; i++) {
-    qSA('.playerScore')[i].textContent = ''
+    qSA('.playerScore')[i].innerHTML = '&nbsp;'
   }
   // - Hide reset button
   qS('.footer').style.display = 'none'
@@ -292,13 +321,13 @@ const main = () => {
   makeDeck()
   // showNoOfCards(deck, '.noOfCards')
   console.log('Made deck')
-  console.log('Showing cards:')
-  showCards(deck)
+  // console.log('Showing cards:')
+  // showCards(deck)
   console.log()
   console.log('Shuffling cards.')
   shuffleDeck(deck)
-  console.log('Showing cards:')
-  showCards(deck)
+  // console.log('Showing cards:')
+  // showCards(deck)
   beginGame()
   //
 }

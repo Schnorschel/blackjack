@@ -12,15 +12,27 @@
     <h2 class="message">&nbsp;</h2>
     <main class="mainContainer">
       <section class="houseContainer playerContainer">
-        <h2 class="playerName">Dealer</h2>
+        <h2 class="playerName">
+          Dealer <span class="dealerNoOfWins noOfWins"></span>
+        </h2>
         <section class="houseSubheading playerSubheading">
           <p class="houseScore playerScore">&nbsp;</p>
         </section>
         <section class="cardsOfHouseContainer cardsContainer"></section>
       </section>
 
+      <section class="flexcontainer">
+        <section class="statsContainer">
+          <div id="progress-bar" class="all-rounded">
+            <div id="progress-bar-percentage" class="all-rounded"><span class="score">0:0</span></div>
+            </div>
+        </section>
+    </section>
+
       <section class="player1Container playerContainer">
-        <h2 class="player1Name playerName">Player 1</h2>
+        <h2 class="player1Name playerName">
+          Player 1<span class="player1NoOfWins noOfWins"></span>
+        </h2>
         <section class="player1Subheading playerSubheading">
           <button class="hitMePlayer1 buttonDisablable">Hit Me!</button>
           <p class="player1Score playerScore">&nbsp;</p>
@@ -31,6 +43,8 @@
       <section class="footer">
         <button class="reset">Play Again</button>
       </section>
+      
+      </div>
     </main>
     <script src="/main.js" charset="utf-8"></script>
   </body>
