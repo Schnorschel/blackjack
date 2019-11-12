@@ -20,7 +20,7 @@ h1 {
 h2 {
   text-align: center;
   margin-top: 0;
-  margin-bottom: 0;
+  margin-bottom: 5px;
   padding-top: 0;
   /* background-color: hotpink; */
   width: 100%;
